@@ -317,8 +317,11 @@ step_gpu() {
 
     # vulkan-loader-android and vulkan-loader-generic conflict with each other.
     # Check which one is already installed and skip the other.
+    # Do NOT install vulkan-icd — it is a metapackage that depends on
+    # vulkan-loader-android and will cause a conflict if vulkan-loader-generic
+    # is already present (as it is on most LineageOS / custom ROM setups).
     if dpkg -s vulkan-loader-generic &>/dev/null; then
-        echo -e "  ${GRAY}  vulkan-loader-generic already installed — skipping vulkan-loader-android (they conflict).${NC}"
+        echo -e "  ${GRAY}  vulkan-loader-generic already installed — skipping conflicting packages.${NC}"
         log "Skipped vulkan-loader-android: vulkan-loader-generic already present."
     elif dpkg -s vulkan-loader-android &>/dev/null; then
         echo -e "  ${GRAY}  vulkan-loader-android already installed.${NC}"
@@ -326,9 +329,6 @@ step_gpu() {
     else
         install_pkg "vulkan-loader-android" "Vulkan Loader"
     fi
-
-    # vulkan-icd: metapackage that pulls in the right ICD for your device
-    install_pkg "vulkan-icd" "Vulkan ICD (device ICDs)"
 
     if [ "$GPU_DRIVER" == "freedreno" ]; then
         # Both the standard and zink-specific Freedreno ICDs — install both for coverage
