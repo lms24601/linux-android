@@ -1,24 +1,28 @@
-# Termux Linux Desktop Setup
+# Repurpose Your Old Android Phone
 
-Run a **full Linux desktop environment on your Android phone** — with hardware GPU acceleration, audio, a web browser, SSH access, and optional Windows app support — using [Termux](https://termux.dev) and [Termux-X11](https://github.com/termux/termux-x11). No PC required.
+Turn any old Android phone into a **Linux desktop** or a **smart home server** — no PC, no root, no cloud. Just [Termux](https://termux.dev).
 
-> This script was created to accompany a YouTube video walkthrough. Timestamps are referenced in the video description.
+> Created to accompany a YouTube video walkthrough. Timestamps are referenced in the video description.
 
----
+```mermaid
+graph LR
+    A["📱 Old Android Phone<br/>+ Termux"] --> B["🖥️ Linux Desktop<br/><i>termux-linux-setup.sh</i>"]
+    A --> C["🏠 Smart Home Server<br/><i>setup-homeassistant.sh</i>"]
+    B --> D["GPU-accelerated DE<br/>Firefox, VLC, SSH, Wine"]
+    C --> E["Home Assistant Core<br/>Control lights & plugs"]
+```
 
-## What This Does
+### Pick your path
 
-The script automates the entire process of:
+| | Linux Desktop | Smart Home Server |
+|---|---|---|
+| **What** | Full GUI desktop environment on your phone | Home Assistant hub that controls WiFi devices |
+| **Use cases** | Learning Linux, Python dev, SSH server, web browsing, media | Control smart lights/plugs, automation, dashboards |
+| **Script** | `bash termux-linux-setup.sh` | `bash setup-homeassistant.sh` |
+| **Time** | 10–30 min | 15–45 min |
+| **Jump to** | [Desktop setup](#installation) | [Home Assistant setup](#home-assistant--smart-home-server) |
 
-1. Setting up a Linux desktop environment (you choose which one)
-2. Enabling GPU hardware acceleration for smooth graphics
-3. Installing a display server so your desktop appears on screen
-4. Installing apps like Firefox and VLC
-5. Setting up Python 3 + pip
-6. Installing and configuring an SSH server so you can connect from your laptop
-7. Optionally installing Wine to run Windows applications
-
-Everything runs **natively on your Android phone** — no emulation, no PC, no cloud.
+You can run both on the same phone — they don't conflict.
 
 ---
 
