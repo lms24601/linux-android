@@ -73,12 +73,10 @@ The `termux-wake-lock` command keeps Termux alive when your screen turns off —
 ### Step 3 — Download and run the script
 
 ```bash
-curl -O https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/termux-linux-setup.sh
+curl -O https://raw.githubusercontent.com/mayukh4/linux-anroid/main/termux-linux-setup.sh
 chmod +x termux-linux-setup.sh
 bash termux-linux-setup.sh
 ```
-
-> Replace `YOUR_USERNAME/YOUR_REPO` with your actual GitHub path.
 
 The script will ask you to choose a desktop environment and whether you want Wine. Everything else is automatic.
 
@@ -218,6 +216,109 @@ To configure Wine, run `winecfg` in your desktop terminal or click the Wine Conf
 
 ---
 
+## Home Assistant — Smart Home Server
+
+Turn your old Android phone into an **always-on smart home hub** that controls WiFi smart lights, plugs, and other devices — accessible from any browser on your network.
+
+Home Assistant Core runs inside a lightweight Ubuntu container (via proot-distro) on your phone. No root, no cloud dependency for local devices.
+
+### What it can control
+
+| Device Type | Brand Examples | How it connects |
+|---|---|---|
+| **WiFi smart lights** | TP-Link Kasa, Govee, LIFX | Direct IP on your local network |
+| **WiFi smart plugs** | TP-Link Kasa, Wemo | Direct IP on your local network |
+| **Cloud-connected devices** | Tuya / Smart Life, Govee | Via cloud API (works everywhere) |
+| **Other WiFi devices** | Smart switches, sensors, cameras | By IP or cloud integration |
+
+### Limitations on Android
+
+- **No Bluetooth** — HA cannot access the phone's Bluetooth stack through Termux
+- **No USB dongles** — Zigbee/Z-Wave USB sticks won't work without root and kernel support
+- **No auto-discovery (mDNS)** — Android 10+ blocks `/proc/net/dev`, which breaks Zeroconf. You must add devices by IP address or cloud API instead of relying on automatic detection
+- **No Docker/Add-ons** — This is HA Core, not HA OS. Community add-ons that require Docker won't work. Core integrations (2000+) work fine.
+
+### Installation
+
+```bash
+curl -O https://raw.githubusercontent.com/mayukh4/linux-anroid/main/setup-homeassistant.sh
+bash setup-homeassistant.sh
+```
+
+Installation takes **15–45 minutes** depending on your phone. The longest step is compiling Home Assistant's Python dependencies (numpy, cryptography, etc.) inside the Ubuntu container.
+
+### Starting and stopping
+
+```bash
+# Start Home Assistant
+bash ~/start-homeassistant.sh
+
+# Stop Home Assistant
+bash ~/stop-homeassistant.sh
+```
+
+### Accessing the dashboard
+
+Once HA is running, open a browser on **any device on your WiFi network** and go to:
+
+```
+http://<your-phone-ip>:8123
+```
+
+Find your phone's IP with `ip addr show wlan0 | grep 'inet '` in Termux.
+
+The first launch takes **5–10 minutes** to initialize. You'll create your admin account in the browser on first visit.
+
+### Adding your first device — TP-Link Kasa
+
+1. Open the Kasa app on your regular phone and note the device's IP address (Device Settings → Device Info)
+2. In HA dashboard: **Settings → Devices & Services → + Add Integration**
+3. Search for **"TP-Link Kasa Smart"**
+4. Enter the device IP address when prompted
+5. Your light/plug should appear — you can now control it from the HA dashboard
+
+> Since mDNS is disabled on Android, auto-discovery won't find devices. Always add by IP.
+
+### Adding Tuya / Smart Life devices
+
+Tuya devices connect through the Tuya cloud API, which works regardless of local network restrictions:
+
+1. Go to [iot.tuya.com](https://iot.tuya.com) and create a free developer account
+2. Create a **Cloud Project** → select your data center region → add the **Smart Home** API
+3. Go to **Devices** → **Link Tuya App Account** → scan the QR code with the Smart Life / Tuya Smart app
+4. In HA dashboard: **Settings → Devices & Services → + Add Integration → Tuya**
+5. Enter your **Access ID** and **Access Secret** from the Tuya IoT console
+
+### Keeping Home Assistant running in the background
+
+By default, Android kills Termux processes when the app is backgrounded. To keep HA running 24/7:
+
+```bash
+# Option 1: Run in background with nohup
+termux-wake-lock
+nohup bash ~/start-homeassistant.sh > ~/hass.log 2>&1 &
+
+# Option 2: Auto-start on Termux launch (add to ~/.bashrc)
+echo 'termux-wake-lock && nohup bash ~/start-homeassistant.sh > ~/hass.log 2>&1 &' >> ~/.bashrc
+```
+
+`termux-wake-lock` prevents Android from suspending the process. Plug your phone into a charger and it becomes a dedicated always-on server.
+
+---
+
+## Video Use Cases
+
+Ideas for what you can do with your old Android phone running this setup:
+
+- **Smart home controller** — plug it in, run Home Assistant 24/7, control your lights and plugs from any device on your network
+- **Linux desktop for learning** — a full XFCE4/KDE/MATE desktop to learn Linux without buying a PC
+- **SSH development server** — code on your laptop, run on your phone over SSH
+- **Python development workstation** — Python 3 + pip ready to go, great for learning or small projects
+- **Media server / file server** — serve files over your local network using Python's built-in HTTP server or install Samba
+- **Network monitoring dashboard** — access Home Assistant and system stats from any browser
+
+---
+
 ## Troubleshooting
 
 **Script exits mid-install without a clear error**
@@ -243,6 +344,18 @@ Make sure `sshd` is running (`ps aux | grep sshd`). If not, run `sshd` again. Co
 
 **Wine doesn't launch**
 Wine needs an active display. Make sure your desktop is running first, then run `winecfg` from the terminal inside the desktop.
+
+**Home Assistant: "pip install homeassistant" fails with compilation errors**
+This usually means a build dependency is missing. Run `proot-distro login ubuntu` and check that `python3-dev`, `libffi-dev`, `libssl-dev`, and `cargo` are installed. Then retry: `source ~/hass-venv/bin/activate && pip install homeassistant`.
+
+**Home Assistant: dashboard not loading at port 8123**
+First launch takes 5–10 minutes. Check if HA is still initializing: `proot-distro login ubuntu -- bash -c "source ~/hass-venv/bin/activate && hass -c ~/hass-config"` and watch the output. Make sure your phone and browser are on the same WiFi network.
+
+**Home Assistant: "address already in use" error on startup**
+Another HA instance is already running. Stop it first with `bash ~/stop-homeassistant.sh`, or manually: `pkill -f "hass -c"`.
+
+**Home Assistant: devices not discovered automatically**
+This is expected on Android. The `/proc/net/dev` restriction on Android 10+ prevents mDNS/Zeroconf from working. Add devices manually by IP address or use cloud-based integrations (Tuya, Govee Cloud, etc.).
 
 ---
 
