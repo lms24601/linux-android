@@ -24,6 +24,10 @@ graph LR
 
 You can run both on the same phone — they don't conflict.
 
+You can follow along the YouTube video here: https://youtu.be/tYm2rQpkOcg?si=moV59vk5J7B4h46N
+
+<img width="1600" height="900" alt="mayukh_builds (3)" src="https://github.com/user-attachments/assets/bb2efabe-ffff-4098-ba58-45d1e68a6aaf" />
+
 ---
 
 ## Requirements
